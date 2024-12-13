@@ -36,8 +36,9 @@ const displayIcon = (status: string) => {
 
 const Steps = ({ steps }: IStepsProps) => {
   return (
-    <div className="p-5 scroll-auto">
-      <h2 className="text-white mb-6 text-xl font-bold">BUILD STEPS</h2>
+    <div className="p-5 h-[90vh] overflow-auto">
+      <h2 className="text-white mb-6 text-xl font-bold italic">BUILD STEPS</h2>
+
       {steps.map((step: IStep) => {
         return (
           <div className="flex flex-col gap-5 text-white">
