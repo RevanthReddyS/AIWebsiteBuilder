@@ -27,7 +27,6 @@ app.post("/template", async (req, res) => {
       },
     ],
   });
-  console.log(msg);
   const answer = (msg.content[0] as TextBlock).text;
   if (answer === "react") {
     res.json({
@@ -61,6 +60,7 @@ app.post("/chat", async (req, res) => {
     messages: req.body.messages,
   });
   console.log(msg);
+  res.json({ response: (msg.content[0] as TextBlock)?.text });
 });
 
 app.listen(3000);

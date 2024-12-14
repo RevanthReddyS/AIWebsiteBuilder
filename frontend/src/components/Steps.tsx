@@ -36,12 +36,15 @@ const displayIcon = (status: string) => {
 
 const Steps = ({ steps }: IStepsProps) => {
   return (
-    <div className="p-5 h-[90vh] overflow-auto">
+    <div className="p-5 h-[85vh] overflow-auto">
       <h2 className="text-white mb-6 text-xl font-bold italic">BUILD STEPS</h2>
 
-      {steps.map((step: IStep) => {
+      {steps.map((step: IStep, index: number) => {
         return (
-          <div className="flex flex-col gap-5 text-white">
+          <div
+            key={`${step.path}-${index}`}
+            className="flex flex-col gap-5 text-white"
+          >
             <div className="flex gap-2">
               {displayIcon(step.status)} <h3>{step.title}</h3>
             </div>

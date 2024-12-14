@@ -1,4 +1,4 @@
-import { FileExplorer } from "@/components/FileExplorer";
+import { FileExplorer, IFileFolder } from "@/components/FileExplorer";
 import Steps, { IStep } from "@/components/Steps";
 import { Textarea } from "@/components/ui/textarea";
 import { BACKEND_API_URL } from "@/config";
@@ -10,144 +10,120 @@ import { useLocation } from "react-router-dom";
 
 const Builder = () => {
   const location = useLocation();
-  const { userMessage } = (location.state as { userMessage: string }) ?? {
-    userMessage: "",
+  const { userInitialPrompt } = (location.state as {
+    userInitialPrompt: string;
+  }) ?? {
+    userInitialPrompt: "",
   };
   const [steps, setSteps] = useState<IStep[]>([]);
+  const [files, setFiles] = useState<IFileFolder[]>([]);
+
   const [fileContent, setFileContent] = useState<string>("");
+
   async function getInitialFiles() {
     const templateResponse = await axios.post(`${BACKEND_API_URL}/template`, {
-      prompt: userMessage.trim(),
+      prompt: userInitialPrompt.trim(),
     });
     const { prompts, uiPrompts } = templateResponse.data;
     setSteps(parseXml(uiPrompts[0]));
-    // const chatResponse = await axios.post(`${BACKEND_API_URL}/chat`, {
-    //   messages: [...prompts, userMessage].map((prompt) => ({
-    //     role: "user",
-    //     content: prompt,
-    //   })),
-    // });
+    const chatResponse = await axios.post(`${BACKEND_API_URL}/chat`, {
+      messages: [...prompts, userInitialPrompt].map((prompt) => ({
+        role: "user",
+        content: prompt,
+      })),
+    });
+    setSteps((step) => [...step, ...parseXml(chatResponse?.data?.response)]);
   }
+
   useEffect(() => {
-    getInitialFiles();
+    if (!steps.length) getInitialFiles();
   }, []);
 
   useEffect(() => {
-    if (!steps.find((step) => step.status === "pending")) {
-      return;
+    if (!steps.some(({ status }) => status === "pending")) {
+      return; // Exit early if no pending steps
     }
-  }, [steps]);
+
+    // Create a shallow copy of the file structure
+    const updatedFiles = [...files];
+
+    for (const step of steps) {
+      if (step.status !== "pending" || !step.path) continue;
+
+      const parsedPath = step.path.split("/");
+      let currentFolder = updatedFiles;
+
+      for (let i = 0; i < parsedPath.length; i++) {
+        const currentName = parsedPath[i];
+        const isLast = i === parsedPath.length - 1;
+        const currentPath = parsedPath.slice(0, i + 1).join("/");
+
+        // Find the node in the current folder
+        let node = currentFolder.find((item) => item.name === currentName);
+
+        if (!node) {
+          // Create a new folder or file
+          node = {
+            name: currentName,
+            type: isLast ? "file" : "folder",
+            path: currentPath,
+            ...(isLast ? { content: step.code ?? "" } : { children: [] }),
+          };
+
+          currentFolder.push(node); // Add the node to the current folder
+        }
+
+        if (isLast) {
+          // Update content for files
+          node.content = step.code ?? "";
+        } else {
+          // Navigate to the children array for folders
+          if (!node.children) {
+            node.children = [];
+          }
+          currentFolder = node.children;
+        }
+      }
+    }
+
+    // Update the state
+    setFiles(updatedFiles);
+    setSteps((prevSteps) =>
+      prevSteps.map((step) =>
+        step.status === "pending" ? { ...step, status: "completed" } : step
+      )
+    );
+  }, [steps, files]);
 
   return (
     <div className="grid grid-cols-12">
       <div className="col-span-3 bg-gray-800">
         <Steps steps={steps ?? []} />
         <Textarea
-          className="fixed bottom-4 mx-2 w-[21rem] bg-white text-black"
+          className="fixed bottom-4 mx-2 w-[24vw] "
           placeholder="Type your message here."
         />
       </div>
       <div className="col-span-3 bg-gray-800 px-2">
         <FileExplorer
           onFileSelect={(content) => setFileContent(content)}
-          files={[
-            {
-              name: "Documents",
-              type: "folder",
-              path: "/Documents",
-              children: [
-                {
-                  name: "Work",
-                  type: "folder",
-                  path: "/Documents/Work",
-                  children: [
-                    {
-                      name: "project-proposal.docx",
-                      type: "file",
-                      path: "/Documents/Work/project-proposal.docx",
-                      content:
-                        "# Project Proposal\n\nExecutive summary of the new project initiative...",
-                    },
-                    {
-                      name: "quarterly-report.xlsx",
-                      type: "file",
-                      path: "/Documents/Work/quarterly-report.xlsx",
-                      content:
-                        "Quarterly financial data and analysis spreadsheet",
-                    },
-                  ],
-                },
-                {
-                  name: "Personal",
-                  type: "folder",
-                  path: "/Documents/Personal",
-                  children: [
-                    {
-                      name: "vacation-plans.txt",
-                      type: "file",
-                      path: "/Documents/Personal/vacation-plans.txt",
-                      content:
-                        "Summer vacation planning notes:\n- Destination: Greece\n- Dates: July 15-30",
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              name: "Pictures",
-              type: "folder",
-              path: "/Pictures",
-              children: [
-                {
-                  name: "Vacation2023",
-                  type: "folder",
-                  path: "/Pictures/Vacation2023",
-                  children: [
-                    {
-                      name: "beach-sunset.jpg",
-                      type: "file",
-                      path: "/Pictures/Vacation2023/beach-sunset.jpg",
-                      content: "Base64 encoded image content would go here",
-                    },
-                    {
-                      name: "mountain-view.png",
-                      type: "folder",
-                      path: "/Pictures/Vacation2023/mountain-view.png",
-                      content: "Base64 encoded image content would go here",
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              name: "Downloads",
-              type: "folder",
-              path: "/Downloads",
-              children: [
-                {
-                  name: "software-installer.exe",
-                  type: "file",
-                  path: "/Downloads/software-installer.exe",
-                  content: "// Binary executable content",
-                },
-                {
-                  name: "important-document.pdf",
-                  type: "file",
-                  path: "/Downloads/important-document.pdf",
-                  content: "PDF document content",
-                },
-              ],
-            },
-          ]}
+          files={files}
         />
       </div>
       <div className="col-span-6">
         <Editor
           height="100vh"
           theme="vs-dark"
-          defaultLanguage="javascript"
-          value={fileContent}
-          options={{ codeLens: true }}
+          defaultLanguage="typescript"
+          value={fileContent ?? ""}
+          options={{
+            readOnly: true,
+            minimap: { enabled: false },
+            fontSize: 14,
+            wordWrap: "on",
+            scrollBeyondLastLine: false,
+            codeLens: true,
+          }}
         />
       </div>
     </div>

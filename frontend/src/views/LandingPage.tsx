@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const [userMessage, setUserMessage] = useState("");
+  const [userInitialPrompt, setUserInitialPrompt] = useState("");
   return (
     <div className="h-screen w-screen flex flex-col flex-wrap space-y-4 content-center justify-center bg-gray-800">
       <h1 className="text-6xl text-center font-bold text-white italic">
@@ -19,15 +19,15 @@ const LandingPage = () => {
         placeholder="Type how you want your website should look like..."
         className="w-[50%] bg-gray-800 shadow-xl h-32 rounded-md p-4"
         onChange={(e) => {
-          setUserMessage(e.target.value);
+          setUserInitialPrompt(e.target.value);
         }}
       />
 
       <button
         className=" bg-blue-900 p-3 rounded text-white"
         onClick={() => {
-          if (userMessage.trim())
-            navigate("/builder", { state: { userMessage } });
+          if (userInitialPrompt.trim())
+            navigate("/builder", { state: { userInitialPrompt } });
         }}
       >
         CREATE WEBSITE

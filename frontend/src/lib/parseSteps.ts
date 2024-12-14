@@ -84,6 +84,6 @@ export function parseXml(response: string): IStep[] {
       });
     }
   }
-
+  console.log("parsedxml", steps);
   return steps;
 }

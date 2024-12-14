@@ -36,7 +36,6 @@ app.post("/template", (req, res) => __awaiter(void 0, void 0, void 0, function* 
             },
         ],
     });
-    console.log(msg);
     const answer = msg.content[0].text;
     if (answer === "react") {
         res.json({
@@ -61,6 +60,7 @@ app.post("/template", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     return;
 }));
 app.post("/chat", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const msg = yield anthropic.messages.create({
         model: "claude-3-5-haiku-20241022",
         max_tokens: 8000,
@@ -69,5 +69,6 @@ app.post("/chat", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         messages: req.body.messages,
     });
     console.log(msg);
+    res.json({ response: (_a = msg.content[0]) === null || _a === void 0 ? void 0 : _a.text });
 }));
 app.listen(3000);

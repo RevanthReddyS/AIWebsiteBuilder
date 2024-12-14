@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 
-interface IFileFolder {
+export interface IFileFolder {
   name: string;
   type: string;
   children?: IFileFolder[];
@@ -64,6 +64,7 @@ function FileFolder({
         </div>
       ) : (
         <div
+          className="cursor-pointer"
           onClick={() => {
             onFileSelect && onFileSelect(content ?? "");
           }}
@@ -91,6 +92,7 @@ export const FileExplorer = ({ onFileSelect, files }: IFileExplorer) => {
             children={file.children}
             type={file.type}
             name={file.name}
+            content={file.content}
             onFileSelect={onFileSelect}
           />
         );
