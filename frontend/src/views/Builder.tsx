@@ -2,6 +2,7 @@ import { FileExplorer, IFileFolder } from "@/components/FileExplorer";
 import Steps, { IStep } from "@/components/Steps";
 import { Textarea } from "@/components/ui/textarea";
 import { BACKEND_API_URL } from "@/config";
+import useWebContainers from "@/hooks/useWebContainers";
 import { parseXml } from "@/lib/parseSteps";
 import Editor from "@monaco-editor/react";
 import axios from "axios";
@@ -10,6 +11,7 @@ import { useLocation } from "react-router-dom";
 
 const Builder = () => {
   const location = useLocation();
+  const { webContainerInstance } = useWebContainers();
   const { userInitialPrompt } = (location.state as {
     userInitialPrompt: string;
   }) ?? {
